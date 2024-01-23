@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { auth,signInWithEmailAndPassword } from "../firebase";
 import * as Yup from "yup";
+import { GlobalStyles } from "../assets/style/globalStyles";
 
 const validationSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Email is required"),
@@ -59,32 +60,32 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
-      <Text style={{ fontSize: 24, marginBottom: 10 }}>Login</Text>
-      <View style={styles.inputContainer}>
+    <KeyboardAvoidingView style={GlobalStyles.container} behavior="padding">
+      <Text style={GlobalStyles.buttonText}>Login</Text>
+      <View style={GlobalStyles.inputContainer}>
         <TextInput
           placeholder="Email"
-          placeholderTextColor={"black"}
+          placeholderTextColor={"white"}
           value={email}
           onChangeText={(text) => setEmail(text)}
-          style={styles.input}
+          style={GlobalStyles.input}
         />
         <TextInput
           placeholder="Password"
-          placeholderTextColor={"black"}
+          placeholderTextColor={"white"}
           value={password}
           onChangeText={(text) => setPassword(text)}
-          style={styles.input}
+          style={GlobalStyles.input}
           secureTextEntry
         />
       </View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={handleLogin} style={styles.button}>
-          <Text style={styles.buttonText}>Login</Text>
+      <View style={GlobalStyles.buttonContainer}>
+        <TouchableOpacity onPress={handleLogin} style={GlobalStyles.button}>
+          <Text style={GlobalStyles.buttonText}>Login</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={navigateToRegister} style={styles.button}>
-          <Text style={styles.buttonText}>Go to Register</Text>
+        <TouchableOpacity onPress={navigateToRegister}>
+          <Text style={GlobalStyles.link}>Go to Register</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -93,50 +94,3 @@ const LoginScreen = () => {
 
 export default LoginScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  inputContainer: {
-    width: "80%",
-  },
-  input: {
-    color: "black",
-    backgroundColor: "white",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 5,
-  },
-  buttonContainer: {
-    width: "60%",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 40,
-  },
-  button: {
-    backgroundColor: "#0782F9",
-    width: "100%",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  buttonOutline: {
-    backgroundColor: "white",
-    marginTop: 5,
-    borderColor: "#0782F9",
-    borderWidth: 2,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  buttonOutlineText: {
-    color: "#0782F9",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-});
