@@ -21,6 +21,7 @@
     "expo-status-bar": "~1.11.1",
     "firebase": "^10.7.2",
     "metro-react-native-babel-preset": "^0.77.0",
+    "mqtt": "^5.3.5",
     "react": "18.2.0",
     "react-native": "0.73.2",
     "react-native-dotenv": "^3.4.9",

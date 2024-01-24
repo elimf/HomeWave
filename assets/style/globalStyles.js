@@ -45,4 +45,26 @@ export const GlobalStyles = {
     marginTop: Spacing.medium,
     textDecorationLine: "underline",
   },
+  containerTopBar: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    width: "100%",
+    padding: 10,
+    backgroundColor: Colors.primary,
+    top: 15,
+    position: "absolute",
+  },
+  signOutButton: {
+    padding: 10,
+  },
+  signOutButtonText: {
+    color: "white",
+    fontWeight: "700",
+  },
 };

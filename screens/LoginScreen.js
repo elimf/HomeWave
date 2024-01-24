@@ -2,7 +2,6 @@ import { useNavigation } from "@react-navigation/core";
 import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -37,7 +36,11 @@ const LoginScreen = () => {
       if (user.emailVerified == false) {
         Alert.alert("Error", "Please verify your email");
       } else {
-        navigation.replace("Home");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Home" }],
+          
+        });
       }
     } catch (error) {
       Alert.alert("Error", error.message);

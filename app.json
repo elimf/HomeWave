@@ -3,8 +3,21 @@
     "name": "HomeWave",
     "slug": "HomeWave",
     "version": "1.0.0",
-    "assetBundlePatterns": [
-      "**/*"
-    ]
+    "icon": "./assets/icon.jpeg",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.jpeg",
+      "resizeMode": "cover",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
   }
 }
