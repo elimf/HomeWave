@@ -9,10 +9,11 @@ import {
   View,
   Alert,
 } from "react-native";
-import { auth,createUserWithEmailAndPassword } from "../firebase";
+import { auth, firebaseAuth } from "../firebase";
 import * as Yup from "yup";
 
 const validationSchema = Yup.object().shape({
+  name: Yup.string().required("Name is required"),
   email: Yup.string().email("Invalid email").required("Email is required"),
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
@@ -21,23 +22,25 @@ const validationSchema = Yup.object().shape({
 
 const RegisterScreen = () => {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
 
   const handleSignUp = async () => {
     try {
-    await validationSchema.validate({ email, password });
-    const userCredentials = await createUserWithEmailAndPassword(
+      await validationSchema.validate({ email, password, name });
+      const userCredential = await firebaseAuth.createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
-      console.log("userCredentials", userCredentials);
-      const user = userCredentials.user;
-      console.log("Registered with:", user.email);
+      firebaseAuth.updateProfile(userCredential.user, {
+        displayName: name,
+      });
+      await firebaseAuth.sendEmailVerification(userCredential.user);
       navigation.replace("Login");
     } catch (error) {
-        console.log("error", error);
+      console.log("error", error);
       Alert.alert("Error", error.message);
     }
   };
@@ -49,6 +52,13 @@ const RegisterScreen = () => {
     <KeyboardAvoidingView style={GlobalStyles.container} behavior="padding">
       <Text style={GlobalStyles.buttonText}>Register</Text>
       <View style={GlobalStyles.inputContainer}>
+        <TextInput
+          placeholder="Name"
+          placeholderTextColor={"white"}
+          value={name}
+          onChangeText={(text) => setName(text)}
+          style={GlobalStyles.input}
+        />
         <TextInput
           placeholder="Email"
           placeholderTextColor={"white"}
@@ -70,7 +80,7 @@ const RegisterScreen = () => {
         <TouchableOpacity onPress={handleSignUp} style={GlobalStyles.button}>
           <Text style={GlobalStyles.buttonText}>Register</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={navigateToLogin} >
+        <TouchableOpacity onPress={navigateToLogin}>
           <Text style={GlobalStyles.link}>Go to Login</Text>
         </TouchableOpacity>
       </View>
@@ -79,5 +89,3 @@ const RegisterScreen = () => {
 };
 
 export default RegisterScreen;
-
-

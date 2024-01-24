@@ -9,7 +9,7 @@ import {
   View,
   Alert,
 } from "react-native";
-import { auth,signInWithEmailAndPassword } from "../firebase";
+import { auth, firebaseAuth } from "../firebase";
 import * as Yup from "yup";
 import { GlobalStyles } from "../assets/style/globalStyles";
 
@@ -25,32 +25,20 @@ const LoginScreen = () => {
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
 
-  const handleSignUp = async () => {
-    try {
-      await validationSchema.validate({ email, password });
-      const userCredentials = await auth.createUserWithEmailAndPassword(
-        email,
-        password
-      );
-      const user = userCredentials.user;
-      console.log("Registered with:", user.email);
-      navigation.replace("Home");
-    } catch (error) {
-      Alert.alert("Error", error.message);
-    }
-  };
-
   const handleLogin = async () => {
     try {
       await validationSchema.validate({ email, password });
-      const userCredentials = await signInWithEmailAndPassword(
+      const userCredentials = await firebaseAuth.signInWithEmailAndPassword(
         auth,
         email,
         password
       );
       const user = userCredentials.user;
-      console.log("Logged in with:", user.email);
-      navigation.replace("Home");
+      if (user.emailVerified == false) {
+        Alert.alert("Error", "Please verify your email");
+      } else {
+        navigation.replace("Home");
+      }
     } catch (error) {
       Alert.alert("Error", error.message);
     }
@@ -93,4 +81,3 @@ const LoginScreen = () => {
 };
 
 export default LoginScreen;
-
