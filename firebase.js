@@ -22,4 +22,4 @@ const auth = firebaseAuth.getAuth(app);
 // Get Firestore instance
 const db = getFirestore(app);
 
-export { auth, firebaseAuth, db }; 
+export { auth, firebaseAuth, db };

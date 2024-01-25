@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,13 @@ import {
   FlatList,
   Button,
   TextInput,
+  Modal,
 } from "react-native";
 import { GlobalStyles } from "../assets/style/globalStyles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import init from "react_native_mqtt";
-import { auth } from "../firebase";
-import RNPickerSelect from "react-native-picker-select";
-
+import { auth, db } from "../firebase";
+import { collection, getDocs } from "firebase/firestore";
 init({
   size: 10000,
   storageBackend: AsyncStorage,
@@ -42,6 +42,8 @@ const HomeScreen = () => {
   const [topic, setTopic] = useState("example-topic");
   const [subscribedTopic, setSubscribedTopic] = useState("");
   const [messageList, setMessageList] = useState([]);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [inputValue, setInputValue] = useState("");
   const [status, setStatus] = useState(STATUS.DISCONNECTED);
 
   useEffect(() => {
@@ -90,14 +92,27 @@ const HomeScreen = () => {
       content: message.payloadString,
       date: new Date().toLocaleString(),
     };
-
+    if (message.payloadString == "test moi") {
+      setModalVisible(true);
+    }
     // Use the functional update to append the new message to the existing list
     setMessageList((prevMessageList) => [newMessage, ...prevMessageList]);
   };
+  const handleValidation = () => {
+    if (inputValue.length == 0) {
+      alert("Entrez le code");
+    }
+    if (inputValue) {
+      closeModal();
+      const newMessage = new Paho.MQTT.Message(inputValue);
+      newMessage.destinationName = subscribedTopic;
+      client.send(newMessage);
+    }
+  };
 
-  const onChangeTopic = (text) => {
-    setTopic(text);
-    subscribeTopic();
+  const closeModal = () => {
+    // Close the modal when the user presses the close button
+    setModalVisible(false);
   };
 
   // Souscription à un sujet
@@ -161,6 +176,29 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={isModalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalText}>Votre alarme a été activée</Text>
+          <Text style={styles.modalText}>Entrez votre code </Text>
+
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            placeholder="Entrez un numéro"
+            value={inputValue}
+            maxLength={4}
+            onChangeText={(text) => setInputValue(text)}
+          />
+
+          <Button title="Valider" onPress={handleValidation} />
+        </View>
+      </Modal>
+
       {renderContent()}
       <View style={styles.messageBox}>
         <FlatList
@@ -200,6 +238,23 @@ const styles = StyleSheet.create({
   textMessage: {
     color: "gray",
     fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  input: {
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
+    marginBottom: 20,
+    paddingLeft: 10,
   },
 });
 
