@@ -7,7 +7,7 @@
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.jpeg",
-      "resizeMode": "cover",
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": ["**/*"],

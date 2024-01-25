@@ -13,7 +13,7 @@ export const GlobalStyles = {
   },
   input: {
     color: Colors.white,
-    backgroundColor: Colors.transparent,
+    backgroundColor: "gray",
     paddingHorizontal: Spacing.medium,
     paddingVertical: Spacing.small,
     borderRadius: 10,

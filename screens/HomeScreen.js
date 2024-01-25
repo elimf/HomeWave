@@ -1,110 +1,206 @@
-import React, { useLayoutEffect, useEffect, useState } from "react";
-import { View, Button, Text } from "react-native";
-import { useNavigation } from "@react-navigation/core";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Button,
+  TextInput,
+} from "react-native";
 import { GlobalStyles } from "../assets/style/globalStyles";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import init from "react_native_mqtt";
 import { auth } from "../firebase";
-import mqtt from "mqtt";
+import RNPickerSelect from "react-native-picker-select";
+
+init({
+  size: 10000,
+  storageBackend: AsyncStorage,
+  defaultExpires: 1000 * 3600 * 24,
+  enableCache: true,
+  reconnect: true,
+  sync: {},
+});
+const STATUS = {
+  CONNECTED: "connected",
+  FETCHING: "fetching",
+  FAILED: "failed",
+  DISCONNECTED: "disconnected",
+};
+const options = {
+  host: "mqtt-dashboard.com",
+  port: 8884,
+  path: "/example-topic",
+  id: auth.currentUser
+    ? auth.currentUser.uid
+    : "id_" + parseInt(Math.random() * 100000),
+};
+// Création d'une instance client
+const client = new Paho.MQTT.Client(options.host, options.port, options.path);
 
 const HomeScreen = () => {
-  const [receivedMessage, setReceivedMessage] = useState("");
-
-  const navigation = useNavigation();
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Button
-          onPress={handleSignOut}
-          title="Sign Out"
-          color="#007BFF" 
-        />
-      ),
-    });
-  }, [navigation]);
-
-  const generateClientId = () => {
-    return `client-${Date.now()}`;
-  };
-
-  const handleSignOut = () => {
-    auth
-      .signOut()
-      .then(() => {
-        navigation.replace("Login");
-      })
-      .catch((error) => alert(error.message));
-  };
-
-  const handleSendDataOverMQTT = () => {
-    const uniqueClientId = generateClientId();
-    const client = mqtt.connect("mqtt://broker.hivemq.com", {
-      clientId: uniqueClientId,
-    });
-
-    client.on("connect", function () {
-      console.log("Connected to MQTT broker");
-
-      // Subscribe to a topic
-      client.subscribe("your-topic", function (err) {
-        if (!err) {
-          // Publish a message
-          client.publish("your-topic", "your-payload");
-        }
-      });
-    });
-
-    client.on("message", function (topic, message) {
-      console.log("Received message:", message.toString());
-      setReceivedMessage(message.toString());
-    });
-
-    // Disconnect from MQTT broker
-    client.end();
-  };
+  const [topic, setTopic] = useState("example-topic");
+  const [subscribedTopic, setSubscribedTopic] = useState("");
+  const [messageList, setMessageList] = useState([]);
+  const [status, setStatus] = useState(STATUS.DISCONNECTED);
 
   useEffect(() => {
-    const client = mqtt.connect("mqtt://test.mosquitto.org:1883", {
-      clientId: "your_client_id",
-    });
-
-    client.on("connect", function () {
-      console.log("connected");
-
-      // Subscribe to a topic
-      client.subscribe("/data", function (err) {
-        if (!err) {
-          // Publish a message
-          client.publish("/data", "test");
-        }
-      });
-    });
-
-    client.on("message", function (topic, message) {
-      console.log("Received message:", message.toString());
-      setReceivedMessage(message.toString());
-    });
-
-    return () => {
-      // Clean up the MQTT client on component unmount
-      client.end();
-    };
+    client.onConnectionLost = onConnectionLost;
+    client.onMessageArrived = onMessageArrived;
   }, []);
 
+  // Connexion réussie
+  const onConnect = () => {
+    console.log("onConnect");
+    subscribeTopic();
+    setStatus(STATUS.CONNECTED);
+  };
+
+  // Échec de la connexion
+  const onFailure = (err) => {
+    console.log("Connect failed!");
+    console.log(err);
+    setStatus(STATUS.FAILED);
+  };
+
+  // Connexion au serveur MQTT
+  const connect = () => {
+    setStatus(STATUS.FETCHING);
+    client.connect({
+      onSuccess: onConnect,
+      useSSL: true,
+      timeout: 5,
+      onFailure: onFailure,
+    });
+  };
+
+  // Perte de connexion
+  const onConnectionLost = (responseObject) => {
+    if (responseObject.errorCode !== 0) {
+      console.log("onConnectionLost:" + responseObject.errorMessage);
+    }
+    setStatus(STATUS.DISCONNECTED);
+  };
+
+  // Réception d'un message
+  const onMessageArrived = (message) => {
+    // Create a new message object with a random id
+    const newMessage = {
+      id: Math.random().toString(36).substr(2, 9), // Generate a random id
+      content: message.payloadString,
+      date: new Date().toLocaleString(),
+    };
+
+    // Use the functional update to append the new message to the existing list
+    setMessageList((prevMessageList) => [newMessage, ...prevMessageList]);
+  };
+
+  const onChangeTopic = (text) => {
+    setTopic(text);
+    subscribeTopic();
+  };
+
+  // Souscription à un sujet
+  const subscribeTopic = () => {
+    setSubscribedTopic(topic);
+    client.subscribe(topic, { qos: 1 });
+  };
+
+  // Publication du message
+  const sendMessage = () => {
+    const newMessage = new Paho.MQTT.Message(options.id + ":" + "test moi");
+    newMessage.destinationName = subscribedTopic;
+    client.send(newMessage);
+  };
+  const renderContent = () => {
+    switch (status) {
+      case STATUS.CONNECTED:
+        return (
+          <View>
+            <View style={{ marginBottom: 30, alignItems: "center" }}>
+              <Button
+                type="solid"
+                title="message"
+                onPress={sendMessage}
+                buttonStyle={{
+                  marginBottom: 50,
+                  backgroundColor: status === STATUS.FAILED ? "red" : "#397af8",
+                }}
+              />
+            </View>
+          </View>
+        );
+      case STATUS.DISCONNECTED:
+        return (
+          <Button
+            type="solid"
+            title="CONNECT"
+            onPress={connect}
+            buttonStyle={{
+              marginBottom: 50,
+              backgroundColor: status === STATUS.FAILED ? "red" : "#397af8",
+            }}
+            loading={status === STATUS.FETCHING}
+            disabled={status === STATUS.FETCHING}
+          />
+        );
+      // Add other cases as needed
+      default:
+        return null;
+    }
+  };
+
+  const renderRow = ({ item }) => {
+    return (
+      <View style={styles.messageContainer}>
+        <Text style={styles.dateText}>{item.date}</Text>
+        <Text style={styles.textMessage}>{item.content}</Text>
+      </View>
+    );
+  };
+
   return (
-    <View style={GlobalStyles.container}>
-      <Text style={GlobalStyles.buttonText}>
-        Welcome {auth.currentUser?.displayName}
-      </Text>
-      <Button
-        title="Send Data Over MQTT"
-        onPress={handleSendDataOverMQTT}
-        color="#007BFF"
-      />
-      <Text style={GlobalStyles.buttonText}>
-        Received Message: {receivedMessage}
-      </Text>
+    <View style={styles.container}>
+      {renderContent()}
+      <View style={styles.messageBox}>
+        <FlatList
+          data={messageList}
+          renderItem={renderRow}
+          keyExtractor={(item) => item.id}
+        />
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 70,
+  },
+  messageBox: {
+    margin: 16,
+    flex: 1,
+  },
+  textInput: {
+    height: 40,
+    margin: 5,
+    borderWidth: 1,
+    padding: 5,
+  },
+  messageContainer: {
+    marginBottom: 10,
+    backgroundColor: "#eee",
+  },
+  dateText: {
+    color: "#888",
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  textMessage: {
+    color: "gray",
+    fontSize: 16,
+  },
+});
 
 export default HomeScreen;
