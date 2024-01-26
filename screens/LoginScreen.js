@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/core";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Text,
@@ -39,7 +39,6 @@ const LoginScreen = () => {
         navigation.reset({
           index: 0,
           routes: [{ name: "Home" }],
-          
         });
       }
     } catch (error) {

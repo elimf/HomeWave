@@ -31,7 +31,7 @@ export const GlobalStyles = {
     padding: Spacing.medium,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 5,
+    marginTop: Spacing.small,
   },
   buttonText: {
     color: Colors.white,
@@ -66,5 +66,42 @@ export const GlobalStyles = {
   signOutButtonText: {
     color: "white",
     fontWeight: "700",
+  },
+  container: {
+    flex: 1,
+    paddingTop: 70,
+  },
+  messageBox: {
+    margin: 16,
+    flex: 1,
+  },
+  textInput: {
+    height: 40,
+    margin: Spacing.small,
+    borderWidth: 1,
+    padding: Spacing.small,
+  },
+  messageContainer: {
+    marginBottom: 10,
+    backgroundColor: "#eee",
+  },
+  dateText: {
+    color: Colors.gray,
+    fontSize: 12,
+    marginBottom: Spacing.small,
+  },
+  textMessage: {
+    color: Colors.gray,
+    fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 10,
   },
 };

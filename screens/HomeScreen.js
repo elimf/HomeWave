@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Button,
-  TextInput,
-  Modal,
-} from "react-native";
+import { View, Text, StyleSheet, FlatList, Button, Modal } from "react-native";
 import { GlobalStyles } from "../assets/style/globalStyles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import init from "react_native_mqtt";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
+import { STATUS } from "../utils/status";
 init({
   size: 10000,
   storageBackend: AsyncStorage,
@@ -20,13 +13,8 @@ init({
   reconnect: true,
   sync: {},
 });
-const STATUS = {
-  CONNECTED: "connected",
-  FETCHING: "fetching",
-  FAILED: "failed",
-  DISCONNECTED: "disconnected",
-};
-const options = {
+
+const MQTT_OPTIONS = {
   host: "mqtt-dashboard.com",
   port: 8884,
   path: "/example-topic",
@@ -34,8 +22,12 @@ const options = {
     ? auth.currentUser.uid
     : "id_" + parseInt(Math.random() * 100000),
 };
-// Création d'une instance client
-const client = new Paho.MQTT.Client(options.host, options.port, options.path);
+// Create a client instance
+const client = new Paho.MQTT.Client(
+  MQTT_OPTIONS.host,
+  MQTT_OPTIONS.port,
+  MQTT_OPTIONS.path
+);
 
 const HomeScreen = () => {
   const [topic, setTopic] = useState("object");
@@ -43,7 +35,6 @@ const HomeScreen = () => {
   const [subscribedTopic, setSubscribedTopic] = useState("");
   const [messageList, setMessageList] = useState([]);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [inputValue, setInputValue] = useState("");
   const [status, setStatus] = useState(STATUS.DISCONNECTED);
 
   useEffect(() => {
@@ -51,21 +42,18 @@ const HomeScreen = () => {
     client.onMessageArrived = onMessageArrived;
   }, []);
 
-  // Connexion réussie
   const onConnect = () => {
     console.log("onConnect");
     subscribeTopic();
     setStatus(STATUS.CONNECTED);
   };
 
-  // Échec de la connexion
   const onFailure = (err) => {
     console.log("Connect failed!");
     console.log(err);
     setStatus(STATUS.FAILED);
   };
 
-  // Connexion au serveur MQTT
   const connect = () => {
     setStatus(STATUS.FETCHING);
     client.connect({
@@ -76,7 +64,6 @@ const HomeScreen = () => {
     });
   };
 
-  // Perte de connexion
   const onConnectionLost = (responseObject) => {
     if (responseObject.errorCode !== 0) {
       console.log("onConnectionLost:" + responseObject.errorMessage);
@@ -84,7 +71,6 @@ const HomeScreen = () => {
     setStatus(STATUS.DISCONNECTED);
   };
 
-  // Réception d'un message
   const onMessageArrived = (message) => {
     const content = message.payloadString;
     if (content === "Code envoyé correcte !") {
@@ -94,7 +80,7 @@ const HomeScreen = () => {
       return;
     }
     const newMessage = {
-      id: Math.random().toString(36).substr(2, 9), // Generate a random id
+      id: Math.random().toString(36).substr(2, 9), 
       content: content,
       date: new Date().toLocaleString(),
     };
@@ -104,31 +90,15 @@ const HomeScreen = () => {
     setMessageList((prevMessageList) => [newMessage, ...prevMessageList]);
   };
 
-  const handleValidation = () => {
-    if (inputValue.length == 0) {
-      alert("Entrez le code");
-    }
-    if (inputValue) {
-      closeModal();
-      setInputValue("");
-      const newMessage = new Paho.MQTT.Message("code:" + inputValue);
-      newMessage.destinationName = subscribedTopic;
-      client.send(newMessage);
-    }
-  };
-
   const closeModal = () => {
-    // Close the modal when the user presses the close button
     setModalVisible(false);
   };
 
-  // Souscription à un sujet
   const subscribeTopic = () => {
     setSubscribedTopic(topic);
     client.subscribe(topic, { qos: 1 });
   };
-  // Publication du message
-  const sendMessage = () => {
+  const sendMessageToActive = () => {
     setActive(false);
     const newMessage = new Paho.MQTT.Message("ACTIVE");
     newMessage.destinationName = subscribedTopic;
@@ -144,8 +114,8 @@ const HomeScreen = () => {
               {active ? (
                 <Button
                   type="solid"
-                  title="Activer alarme"
-                  onPress={sendMessage}
+                  title="Activer l'alarme"
+                  onPress={sendMessageToActive}
                   buttonStyle={{
                     marginBottom: 50,
                     backgroundColor:
@@ -155,7 +125,6 @@ const HomeScreen = () => {
               ) : (
                 <></>
               )}
-
               <Text style={GlobalStyles.titleText}>Donnée en temps réel</Text>
             </View>
           </View>
@@ -181,44 +150,30 @@ const HomeScreen = () => {
 
   const renderRow = ({ item }) => {
     return (
-      <View style={styles.messageContainer}>
-        <Text style={styles.dateText}>{item.date}</Text>
-        <Text style={styles.textMessage}>{item.content}</Text>
+      <View style={GlobalStyles.messageContainer}>
+        <Text style={GlobalStyles.dateText}>{item.date}</Text>
+        <Text style={GlobalStyles.textMessage}>{item.content}</Text>
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <View style={GlobalStyles.container}>
       <Modal
         animationType="slide"
         transparent={false}
         visible={isModalVisible}
         onRequestClose={closeModal}
       >
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalText}>
-            Attention une présence a été détecté chez vous{" "}
+        <View style={GlobalStyles.modalContainer}>
+          <Text style={GlobalStyles.modalText}>
+            Attention une présence a été détectée chez vous{" "}
           </Text>
-          {/* <Text style={styles.modalText}>
-            Entrez votre code si vous souhaitez désactivé
-          </Text> */}
-          {/* <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            placeholder="Entrez un numéro"
-            value={inputValue}
-            maxLength={4}
-            onChangeText={(text) => setInputValue(text)}
-          /> */}
-
-          {/* <Button title="Valider" onPress={handleValidation} /> */}
           <Button title="Retour" onPress={closeModal} />
         </View>
       </Modal>
-
       {renderContent()}
-      <View style={styles.messageBox}>
+      <View style={GlobalStyles.messageBox}>
         <FlatList
           data={messageList}
           renderItem={renderRow}
@@ -228,52 +183,4 @@ const HomeScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 70,
-  },
-  messageBox: {
-    margin: 16,
-    flex: 1,
-  },
-  textInput: {
-    height: 40,
-    margin: 5,
-    borderWidth: 1,
-    padding: 5,
-  },
-  messageContainer: {
-    marginBottom: 10,
-    backgroundColor: "#eee",
-  },
-  dateText: {
-    color: "#888",
-    fontSize: 12,
-    marginBottom: 5,
-  },
-  textMessage: {
-    color: "gray",
-    fontSize: 16,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  modalText: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  input: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingLeft: 10,
-  },
-});
-
 export default HomeScreen;
