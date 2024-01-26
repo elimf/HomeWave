@@ -29,7 +29,6 @@ const STATUS = {
 const options = {
   host: "mqtt-dashboard.com",
   port: 8884,
-  path: "/example-topic",
   id: auth.currentUser
     ? auth.currentUser.uid
     : "id_" + parseInt(Math.random() * 100000),
