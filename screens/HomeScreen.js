@@ -29,6 +29,7 @@ const STATUS = {
 const options = {
   host: "mqtt-dashboard.com",
   port: 8884,
+  path: "/example-topic",
   id: auth.currentUser
     ? auth.currentUser.uid
     : "id_" + parseInt(Math.random() * 100000),
@@ -84,27 +85,18 @@ const HomeScreen = () => {
 
   // Réception d'un message
   const onMessageArrived = (message) => {
-    // Create a new message object with a random id
-    console.log("onMessageArrived:" + message.payloadString);
-
     const content = message.payloadString;
-
-    // Skip adding the message if it starts with "Code"
     if (content.startsWith("code")) {
       return;
     }
-
     const newMessage = {
       id: Math.random().toString(36).substr(2, 9), // Generate a random id
       content: content,
       date: new Date().toLocaleString(),
     };
-
     if (content === "Mouvement détecté !") {
       setModalVisible(true);
     }
-
-    // Use the functional update to append the new message to the existing list
     setMessageList((prevMessageList) => [newMessage, ...prevMessageList]);
   };
 
