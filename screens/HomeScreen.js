@@ -130,7 +130,7 @@ const HomeScreen = () => {
         return (
           <View>
             <View style={{ marginBottom: 30, alignItems: "center" }}>
-              <Text style={GlobalStyles.titleText}>Data in Real Time</Text>
+              <Text style={GlobalStyles.titleText}>Donnée en temps réel</Text>
             </View>
           </View>
         );

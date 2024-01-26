@@ -73,7 +73,7 @@ const LoginScreen = () => {
 
       <View style={GlobalStyles.buttonContainer}>
         <TouchableOpacity onPress={handleLogin} style={GlobalStyles.button}>
-          <Text style={GlobalStyles.buttonText}>Login</Text>
+          <Text style={GlobalStyles.buttonText}>Connexion</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={navigateToRegister}>
           <Text style={GlobalStyles.link}>Go to Register</Text>
