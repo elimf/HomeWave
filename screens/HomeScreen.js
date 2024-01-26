@@ -39,6 +39,7 @@ const client = new Paho.MQTT.Client(options.host, options.port, options.path);
 
 const HomeScreen = () => {
   const [topic, setTopic] = useState("object");
+  const [active, setActive] = useState(false);
   const [subscribedTopic, setSubscribedTopic] = useState("");
   const [messageList, setMessageList] = useState([]);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -86,7 +87,10 @@ const HomeScreen = () => {
   // Réception d'un message
   const onMessageArrived = (message) => {
     const content = message.payloadString;
-    if (content.startsWith("code")) {
+    if (content === "Code envoyé correcte !") {
+      setActive(true);
+    }
+    if (content === "ACTIVE") {
       return;
     }
     const newMessage = {
@@ -123,6 +127,13 @@ const HomeScreen = () => {
     setSubscribedTopic(topic);
     client.subscribe(topic, { qos: 1 });
   };
+  // Publication du message
+  const sendMessage = () => {
+    setActive(false);
+    const newMessage = new Paho.MQTT.Message("ACTIVE");
+    newMessage.destinationName = subscribedTopic;
+    client.send(newMessage);
+  };
 
   const renderContent = () => {
     switch (status) {
@@ -130,6 +141,21 @@ const HomeScreen = () => {
         return (
           <View>
             <View style={{ marginBottom: 30, alignItems: "center" }}>
+              {active ? (
+                <Button
+                  type="solid"
+                  title="Activer alarme"
+                  onPress={sendMessage}
+                  buttonStyle={{
+                    marginBottom: 50,
+                    backgroundColor:
+                      status === STATUS.FAILED ? "red" : "#397af8",
+                  }}
+                />
+              ) : (
+                <></>
+              )}
+
               <Text style={GlobalStyles.titleText}>Donnée en temps réel</Text>
             </View>
           </View>
@@ -174,20 +200,19 @@ const HomeScreen = () => {
           <Text style={styles.modalText}>
             Attention une présence a été détecté chez vous{" "}
           </Text>
-          <Text style={styles.modalText}>
+          {/* <Text style={styles.modalText}>
             Entrez votre code si vous souhaitez désactivé
-          </Text>
-
-          <TextInput
+          </Text> */}
+          {/* <TextInput
             style={styles.input}
             keyboardType="numeric"
             placeholder="Entrez un numéro"
             value={inputValue}
             maxLength={4}
             onChangeText={(text) => setInputValue(text)}
-          />
+          /> */}
 
-          <Button title="Valider" onPress={handleValidation} />
+          {/* <Button title="Valider" onPress={handleValidation} /> */}
           <Button title="Retour" onPress={closeModal} />
         </View>
       </Modal>
