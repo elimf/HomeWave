@@ -104,7 +104,7 @@ const HomeScreen = () => {
     }
     if (inputValue) {
       closeModal();
-      const newMessage = new Paho.MQTT.Message(inputValue);
+      const newMessage = new Paho.MQTT.Message("Code:" + inputValue);
       newMessage.destinationName = subscribedTopic;
       client.send(newMessage);
     }
