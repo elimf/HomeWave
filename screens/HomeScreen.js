@@ -12,7 +12,6 @@ import { GlobalStyles } from "../assets/style/globalStyles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import init from "react_native_mqtt";
 import { auth, db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
 init({
   size: 10000,
   storageBackend: AsyncStorage,
@@ -39,7 +38,7 @@ const options = {
 const client = new Paho.MQTT.Client(options.host, options.port, options.path);
 
 const HomeScreen = () => {
-  const [topic, setTopic] = useState("example-topic");
+  const [topic, setTopic] = useState("object");
   const [subscribedTopic, setSubscribedTopic] = useState("");
   const [messageList, setMessageList] = useState([]);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -87,24 +86,37 @@ const HomeScreen = () => {
   // Réception d'un message
   const onMessageArrived = (message) => {
     // Create a new message object with a random id
+    console.log("onMessageArrived:" + message.payloadString);
+
+    const content = message.payloadString;
+
+    // Skip adding the message if it starts with "Code"
+    if (content.startsWith("code")) {
+      return;
+    }
+
     const newMessage = {
       id: Math.random().toString(36).substr(2, 9), // Generate a random id
-      content: message.payloadString,
+      content: content,
       date: new Date().toLocaleString(),
     };
-    if (message.payloadString == "test moi") {
+
+    if (content === "Mouvement détecté !") {
       setModalVisible(true);
     }
+
     // Use the functional update to append the new message to the existing list
     setMessageList((prevMessageList) => [newMessage, ...prevMessageList]);
   };
+
   const handleValidation = () => {
     if (inputValue.length == 0) {
       alert("Entrez le code");
     }
     if (inputValue) {
       closeModal();
-      const newMessage = new Paho.MQTT.Message("Code:" + inputValue);
+      setInputValue("");
+      const newMessage = new Paho.MQTT.Message("code:" + inputValue);
       newMessage.destinationName = subscribedTopic;
       client.send(newMessage);
     }
@@ -121,27 +133,13 @@ const HomeScreen = () => {
     client.subscribe(topic, { qos: 1 });
   };
 
-  // Publication du message
-  const sendMessage = () => {
-    const newMessage = new Paho.MQTT.Message(options.id + ":" + "test moi");
-    newMessage.destinationName = subscribedTopic;
-    client.send(newMessage);
-  };
   const renderContent = () => {
     switch (status) {
       case STATUS.CONNECTED:
         return (
           <View>
             <View style={{ marginBottom: 30, alignItems: "center" }}>
-              <Button
-                type="solid"
-                title="message"
-                onPress={sendMessage}
-                buttonStyle={{
-                  marginBottom: 50,
-                  backgroundColor: status === STATUS.FAILED ? "red" : "#397af8",
-                }}
-              />
+              <Text style={GlobalStyles.titleText}>Data in Real Time</Text>
             </View>
           </View>
         );
@@ -149,7 +147,7 @@ const HomeScreen = () => {
         return (
           <Button
             type="solid"
-            title="CONNECT"
+            title="Connect to my device"
             onPress={connect}
             buttonStyle={{
               marginBottom: 50,
@@ -159,7 +157,6 @@ const HomeScreen = () => {
             disabled={status === STATUS.FETCHING}
           />
         );
-      // Add other cases as needed
       default:
         return null;
     }
@@ -183,8 +180,12 @@ const HomeScreen = () => {
         onRequestClose={closeModal}
       >
         <View style={styles.modalContainer}>
-          <Text style={styles.modalText}>Votre alarme a été activée</Text>
-          <Text style={styles.modalText}>Entrez votre code </Text>
+          <Text style={styles.modalText}>
+            Attention une présence a été détecté chez vous{" "}
+          </Text>
+          <Text style={styles.modalText}>
+            Entrez votre code si vous souhaitez désactivé
+          </Text>
 
           <TextInput
             style={styles.input}
@@ -196,6 +197,7 @@ const HomeScreen = () => {
           />
 
           <Button title="Valider" onPress={handleValidation} />
+          <Button title="Retour" onPress={closeModal} />
         </View>
       </Modal>
 
